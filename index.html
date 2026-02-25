@@ -338,6 +338,26 @@
     "tehran":      { name: "Tehran",       lat: 35.6892, lon:  51.3890, tz: "Asia/Tehran" },
   };
 
+  function detectCityFromTimezone(tz) {
+    // 1. Exact timezone match
+    for (const [key, city] of Object.entries(CITIES)) {
+      if (city.tz === tz) return key;
+    }
+    // 2. City name embedded in timezone string (e.g. "America/New_York" ~ "New York")
+    const tzCity = tz.split('/').pop().replace(/_/g, ' ').toLowerCase();
+    for (const [key, city] of Object.entries(CITIES)) {
+      if (city.name.toLowerCase() === tzCity) return key;
+    }
+    // 3. Continent prefix fallback
+    const prefix = tz.split('/')[0];
+    const fallbacks = {
+      'America': 'new-york', 'Europe': 'london', 'Asia': 'tokyo',
+      'Australia': 'sydney',  'Pacific': 'sydney', 'Africa': 'cairo',
+      'Atlantic': 'london',   'Indian': 'dubai',
+    };
+    return fallbacks[prefix] || 'amsterdam';
+  }
+
   let currentCityKey = "amsterdam";
 
   function buildApiUrl(cityKey) {
@@ -1862,7 +1882,16 @@
     spawnFlags();
   }
 
-  switchCityVisuals('amsterdam');
+  // Detect initial city from browser timezone
+  try {
+    const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const detected = detectCityFromTimezone(browserTz);
+    currentCityKey = detected;
+    const picker = document.getElementById('city-picker');
+    if (picker) picker.value = detected;
+  } catch (e) { /* keep amsterdam */ }
+
+  switchCityVisuals(currentCityKey);
 
   // ---------------------------------------------------------------------------
   // Sun mesh
