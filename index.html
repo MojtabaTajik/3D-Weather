@@ -610,6 +610,58 @@
       // Canal water strips
       addMesh(new THREE.BoxGeometry(80,0.15,5), 0x1a3055, 0,-0.42,-7);
       addMesh(new THREE.BoxGeometry(80,0.15,4), 0x1a3055, 0,-0.42,-14);
+
+      // De Wallen — red-light district block along the canal
+      const rlRng = makeRng(42);
+      const rlX = [-22, -19, -16, -13, -10];
+      rlX.forEach((bx, i) => {
+        const bw = 1.8 + rlRng() * 0.8;
+        const bh = 5 + rlRng() * 4;
+        const bd = 1.8 + rlRng() * 0.6;
+        const bz = -9 + (rlRng() - 0.5) * 0.8;
+        // Dark brick building
+        buildingsGroup.add(createBuilding(bx, bz, bw, bh, bd, 0x3a1a18));
+        if (rlRng() > 0.3) buildingsGroup.add(createGabledRoof(bx, bh - 0.5, bz, bw, bd, 0x1a0a08));
+        // Red glowing windows — the signature look
+        const winGeo = new THREE.PlaneGeometry(0.55, 0.75);
+        const floors = Math.max(1, Math.floor((bh - 1.2) / 1.4));
+        for (let f = 0; f < floors; f++) {
+          const redMat = new THREE.MeshStandardMaterial({
+            color: 0xff1133,
+            emissive: 0xff0022,
+            emissiveIntensity: 1.2 + rlRng() * 0.6,
+            roughness: 1,
+            transparent: true,
+            opacity: 0.88,
+          });
+          const win = new THREE.Mesh(winGeo, redMat);
+          win.position.set(bx, 1.0 + f * 1.4, bz + bd / 2 + 0.01);
+          buildingsGroup.add(win);
+          // Faint pink curtain behind the window
+          const curtainMat = new THREE.MeshStandardMaterial({
+            color: 0xff88aa,
+            emissive: 0xff3366,
+            emissiveIntensity: 0.5,
+            roughness: 1,
+            transparent: true,
+            opacity: 0.35,
+          });
+          const curtain = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.7), curtainMat);
+          curtain.position.set(bx, 1.0 + f * 1.4, bz + bd / 2 - 0.05);
+          buildingsGroup.add(curtain);
+          // Silhouette in the window — dark figure shape (head + body)
+          const silMat = new THREE.MeshStandardMaterial({ color: 0x110008, roughness: 1 });
+          const silHead = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), silMat);
+          silHead.position.set(bx + (rlRng() - 0.5) * 0.15, 1.28 + f * 1.4, bz + bd / 2 - 0.02);
+          buildingsGroup.add(silHead);
+          const silBody = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.13, 0.42, 6), silMat);
+          silBody.position.set(bx + (rlRng() - 0.5) * 0.15, 0.96 + f * 1.4, bz + bd / 2 - 0.02);
+          buildingsGroup.add(silBody);
+        }
+        // Red lantern above door
+        addMesh(new THREE.SphereGeometry(0.14, 8, 8), 0xff1133, bx, 1.1, bz + bd / 2 + 0.2,
+          { emissive: 0xff0011, emissiveIntensity: 2.0 });
+      });
     },
 
     // ── LONDON ───────────────────────────────────────────────────────────
