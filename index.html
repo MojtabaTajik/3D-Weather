@@ -1746,15 +1746,32 @@
   const birdsGroup = new THREE.Group();
   scene.add(birdsGroup);
 
+  // Canvas bird silhouette — M-shaped wings, drawn once and shared
+  const birdCanvas = document.createElement('canvas');
+  birdCanvas.width = 64; birdCanvas.height = 32;
+  const bCtx = birdCanvas.getContext('2d');
+  bCtx.clearRect(0, 0, 64, 32);
+  bCtx.fillStyle = 'rgba(18, 18, 26, 0.93)';
+  bCtx.beginPath();
+  bCtx.moveTo(32, 21);
+  bCtx.quadraticCurveTo(22,  6,  1, 13);
+  bCtx.quadraticCurveTo(20, 21, 32, 21);
+  bCtx.quadraticCurveTo(44,  6, 63, 13);
+  bCtx.quadraticCurveTo(42, 21, 32, 21);
+  bCtx.fill();
+  bCtx.beginPath();
+  bCtx.arc(32, 21, 2.8, 0, Math.PI * 2);
+  bCtx.fill();
+  const birdTex = new THREE.CanvasTexture(birdCanvas);
+  const birdSpriteMat = new THREE.SpriteMaterial({ map: birdTex, transparent: true, depthWrite: false });
+
   const birdData = [];
   for (let i = 0; i < 8; i++) {
-    const wing = new THREE.Mesh(
-      new THREE.BoxGeometry(0.55, 0.06, 0.18),
-      new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 1 })
-    );
-    birdsGroup.add(wing);
+    const sprite = new THREE.Sprite(birdSpriteMat);
+    sprite.scale.set(2.2, 1.1, 1);
+    birdsGroup.add(sprite);
     birdData.push({
-      mesh: wing,
+      mesh: sprite,
       orbitRadius: 5 + Math.random() * 7,
       orbitSpeed:  0.28 + Math.random() * 0.22,
       orbitPhase:  (i / 8) * Math.PI * 2,
@@ -2466,8 +2483,9 @@
         bd.heightBase + Math.sin(elapsed * 0.4 + bd.heightPhase) * bd.heightAmp,
         -17 + Math.sin(angle) * bd.orbitRadius
       );
-      bd.mesh.rotation.y = -angle + Math.PI / 2;
-      bd.mesh.scale.y = 1 + Math.sin(bd.flapPhase) * 0.35;
+      // Sprites auto-face camera; animate flap by scaling Y
+      const flap = 1.1 + Math.sin(bd.flapPhase) * 0.55;
+      bd.mesh.scale.set(2.2, flap, 1);
     }
 
     // Umbrellas — open during rain
